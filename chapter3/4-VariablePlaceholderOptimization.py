@@ -108,4 +108,3 @@ with tf.Session() as sess:
             print(step,[w_eval, b_eval])
             wb_.append([w_eval, b_eval])
     print(50,[w_eval, b_eval])
-
