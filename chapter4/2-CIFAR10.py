@@ -49,43 +49,44 @@ class CifarDataManger(object):
         self.train = CifarLoader(['data_batch_{}'.format(i) for i in range(1,6)]).load()
         self.test = CifarLoader(['test_batch']).load()
 
-d = CifarDataManger()
-print('Number of train images:{}'.format(len(d.train.images)))
-print('Number of train labels:{}'.format(len(d.train.labels)))
-print('Number of test images:{}'.format(len(d.test.images)))
-print('Number of test labels:{}'.format(len(d.test.labels)))
+if __name__ == '__main__':
+    d = CifarDataManger()
+    print('Number of train images:{}'.format(len(d.train.images)))
+    print('Number of train labels:{}'.format(len(d.train.labels)))
+    print('Number of test images:{}'.format(len(d.test.images)))
+    print('Number of test labels:{}'.format(len(d.test.labels)))
 
-#start
-x = tf.placeholder(tf.float32,shape=[None,32,32,3])
-y_ = tf.placeholder(tf.float32,shape=[None,10])
-keep_prob = tf.placeholder(tf.float32)
+    #start
+    x = tf.placeholder(tf.float32,shape=[None,32,32,3])
+    y_ = tf.placeholder(tf.float32,shape=[None,10])
+    keep_prob = tf.placeholder(tf.float32)
 
-conv1 = conv_layer(x,shape=[5,5,3,32])
-conv1_pool = max_pool_2(conv1)
-conv2 = conv_layer(conv1_pool,shape=[5,5,32,64])
-conv2_pool = max_pool_2(conv2)
-conv2_flat = tf.reshape(conv2_pool,[-1,8*8*64])
+    conv1 = conv_layer(x,shape=[5,5,3,32])
+    conv1_pool = max_pool_2(conv1)
+    conv2 = conv_layer(conv1_pool,shape=[5,5,32,64])
+    conv2_pool = max_pool_2(conv2)
+    conv2_flat = tf.reshape(conv2_pool,[-1,8*8*64])
 
-full_1 = tf.nn.relu(full_layer(conv2_flat,1024))
-full1_drop = tf.nn.dropout(full_1,keep_prob=keep_prob)
+    full_1 = tf.nn.relu(full_layer(conv2_flat,1024))
+    full1_drop = tf.nn.dropout(full_1,keep_prob=keep_prob)
 
-y_conv = full_layer(full1_drop,10)
-cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv,labels=y_))
-train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
+    y_conv = full_layer(full1_drop,10)
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=y_conv,labels=y_))
+    train_step = tf.train.AdamOptimizer(1e-3).minimize(cross_entropy)
 
-correct_prediction = tf.equal(tf.argmax(y_conv,1),tf.argmax(y_,1))
-accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
+    correct_prediction = tf.equal(tf.argmax(y_conv,1),tf.argmax(y_,1))
+    accuracy = tf.reduce_mean(tf.cast(correct_prediction,tf.float32))
 
-def test(sess):
-    X= d.test.images.reshape(10,1000,32,32,3)
-    Y = d.test.labels.reshape(10,1000,10)
-    acc = np.mean([sess.run(accuracy,feed_dict = {x:X[i],y_:Y[i],keep_prob :1.0}) for i in range(10)])
-    print('Accuracy:{:.4}%'.format(acc*100))
+    def test(sess):
+        X= d.test.images.reshape(10,1000,32,32,3)
+        Y = d.test.labels.reshape(10,1000,10)
+        acc = np.mean([sess.run(accuracy,feed_dict = {x:X[i],y_:Y[i],keep_prob :1.0}) for i in range(10)])
+        print('Accuracy:{:.4}%'.format(acc*100))
 
-with tf.Session()as sess:
-    sess.run(tf.global_variables_initializer())
-    for i in range(STEPS):
-        batch = d.train.next_batch(BATCH_SIZE)
-        sess.run(train_step,feed_dict={x:batch[0],y_:batch[1],keep_prob:0.5})
-    test(sess)
+    with tf.Session()as sess:
+        sess.run(tf.global_variables_initializer())
+        for i in range(STEPS):
+            batch = d.train.next_batch(BATCH_SIZE)
+            sess.run(train_step,feed_dict={x:batch[0],y_:batch[1],keep_prob:0.5})
+        test(sess)
 
