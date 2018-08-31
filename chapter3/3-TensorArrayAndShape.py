@@ -25,10 +25,12 @@ sess.close()
 A = tf.constant([[1,2,3],[4,5,6]])
 print(A.get_shape())
 
-x = tf.constant([1,0,1])
+x = tf.constant([[1,0,1],[1,0,1]])
 print(x.get_shape())
 x = tf.expand_dims(x,1)
+print('*')
 print(x.get_shape())
+print(x)
 
 b = tf.matmul(A,x)
 sess = tf.InteractiveSession()
