@@ -97,10 +97,11 @@ if __name__ == '__main__':
                                                   ,-1.0,1.0),name='embedding')
         embed = tf.nn.embedding_lookup(embedding,_inputs)
     #lstm
-    # num_LSTM_layer = 2
+    num_LSTM_layer = 2
     with tf.variable_scope('lstm'):
         lstm_cell = tf.contrib.rnn.BasicLSTMCell(hidden_layer_size,forget_bias= 1.0)
-        # cell = tf.contrib.rnn.MultiRNNCell(cells = [lstm_cell]*num_LSTM_layer,state_is_tuple=True)
+        # lstm_cell_list = [tf.contrib.rnn.BasicLSTMCell(hidden_layer_size,forget_bias= 1.0) for _ in range(num_LSTM_layer)]
+        # cell = tf.contrib.rnn.MultiRNNCell(cells=lstm_cell_list, state_is_tuple=True)
         outputs,states = tf.nn.dynamic_rnn(lstm_cell,embed,sequence_length=_seqlens,dtype=tf.float32)
     weights = {
         'linear_layer':tf.Variable(tf.truncated_normal([hidden_layer_size,num_class],mean=0,stddev=.01))
@@ -109,7 +110,8 @@ if __name__ == '__main__':
         'linear_layer':tf.Variable(tf.truncated_normal([num_class],mean=0,stddev=.01))
     }
 
-    final_output = tf.matmul(states[1],weights['linear_layer']+biases['linear_layer'])
+    final_output = tf.matmul(states[1], weights['linear_layer']) + biases['linear_layer']
+    # final_output = tf.matmul(states[num_LSTM_layer-1][1],weights['linear_layer'])+biases['linear_layer']
     softmax = tf.nn.softmax_cross_entropy_with_logits(logits=final_output,labels=_labels)
     cross_entropy = tf.reduce_mean(softmax)
 
@@ -138,11 +140,13 @@ if __name__ == '__main__':
 
         output_example = sess.run([outputs],feed_dict={_inputs:x_test,
                                                        _labels:y_test,_seqlens:seqlen_test})
-        states_example = sess.run([states[1]],feed_dict={_inputs:x_test,
+        states_example = sess.run([states],feed_dict={_inputs:x_test,
                                                        _labels:y_test,_seqlens:seqlen_test})
 
         print(seqlen_test[1])
         print(output_example[0][1].shape)
-        print(output_example[0][1][:6,:3])
-        print(states_example[0][1].shape)
-        print(states_example[0][1][:3])
+        # print(output_example[0][1][:6,:3])
+        print(output_example[0][1,-1, :])
+        print(len(states_example[0]))
+        print(states_example[0][1][1,:])
+        # print(states_example[0][1][:3])
